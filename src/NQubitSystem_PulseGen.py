@@ -10,9 +10,9 @@ from scipy.interpolate import RectBivariateSpline
 sys.path.append('O:\\68707\\JoelHoward\\DataAnalysis')
 pyQLabDir = r"C:\Users\68707\Desktop\LV_JH\PyQLab-Working"
 sys.path.append(pyQLabDir)
-from NQubitSystem import *
-import AdvancedWaveforms_JH as wfm_adv
-from WaveformConstructorPrimitives_JH import *
+from .NQubitSystem import *
+from . import AdvancedWaveforms_JH as wfm_adv
+from .WaveformConstructorPrimitives_JH import *
 
 
 class Transition_PG(Transition):

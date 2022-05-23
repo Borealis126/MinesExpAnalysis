@@ -1,6 +1,5 @@
 import sys
-sys.path.append("O:\\68707\\JoelHoward\\PulseShaping")
-import NQubitSystem_PulseGen as NQS_PG
+from . import NQubitSystem_PulseGen as NQS_PG
 from qutip import basis, tensor, qeye
 from sympy import Matrix, zeros, eye, symbols
 from sympy.physics.quantum import Dagger, TensorProduct

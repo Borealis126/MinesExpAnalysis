@@ -1,4 +1,4 @@
-from WaveformConstructorPrimitives_JH import *
+from .WaveformConstructorPrimitives_JH import *
 import numpy as np
 import json
 from copy import deepcopy
