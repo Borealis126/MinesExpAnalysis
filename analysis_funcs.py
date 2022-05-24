@@ -137,9 +137,8 @@ def saveIFs(gateName, rabiStrengthMHz, gateDataVals, IFdict):
                delimiter=",")
 
 
-def IFs_gaussianNoise(basePath, date, gateIndices, gateDataVals, tomos):
+def IFs_gaussianNoise(basePath, date, gateIndices, gateDataVals, tomos, numNoiseTrials):
     np.random.seed(0)
-    numNoiseTrials = 10
     N = 500
     G_IF_Exp_Theory_Mean = list()
     G_IF_Exp_Theory_STD = list()
