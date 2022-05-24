@@ -1,10 +1,23 @@
-# Overview
+# Introduction
 This project makes it easy to manipulate and plot the data used in the 
-two-qubit paper. It must be run in a directory containing ExpData, 
+two-qubit paper. It must be run in conjunction with ExpData, 
 which can be found 
 [here](https://drive.google.com/file/d/191BVc0W6bm6WQ7XinuNCUlevVMtIJ1YW/view?usp=sharing)
-(make sure to unzip it).
+(unzip it and place it into the project folder containing analysis.ipynb).
 
+# Requirements
+A python 3.10 environment. Run the following commands to install dependencies:
+```
+conda install numpy scipy matplotlib pandas scikit-learn jupyter notebook sympy
+
+conda install -c conda-forge cvxpy qutip
+
+pip install forest-benchmarking
+```
+And then install pytorch via the 
+installation instructions [here](https://pytorch.org/).
+
+# Overview
 The user interface is analysis.ipynb. There the data for the various runs
 can be loaded (via input in the User Parameters section).
 
@@ -33,14 +46,3 @@ Returns dictionary containing IF mean/std data.
 - fidelityCurve_noise: Plots fidelity curves based on IFs_gaussianNoise 
 results.
 
-# Requirements
-A python 3.10 environment. Run the following commands to install dependencies:
-```
-conda install numpy scipy matplotlib pandas scikit-learn jupyter notebook sympy
-
-conda install -c conda-forge cvxpy qutip
-
-pip install forest-benchmarking
-```
-And then install pytorch via the 
-installation instructions [here](https://pytorch.org/)
