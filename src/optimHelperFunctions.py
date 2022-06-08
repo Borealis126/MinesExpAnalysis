@@ -81,4 +81,4 @@ def gate(qSys, gate_name):
             ket00 * ket00.conj().T + ket01 * ket10.conj().T + ket10 * ket01.conj().T + ket11 * ket11.conj().T,
             dtype=dt)
     else:
-        return None
+        return torch.tensor(ket00 * ket00.conj().T, dtype=dt) #Just a placeholder

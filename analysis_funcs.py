@@ -32,7 +32,17 @@ def gateData(gateName, basePath, date, gateIndices):
     gates = wfm_adv.loadGates(qSys, basePath / 'gates.json')
     U_vals = [NQS_QT.unitaryFromOpList(qSys.gateExpSliceToUnitaryOpList(gates[g_i])) for g_i in gateIndices]
     G_T = [sum([pulse.duration for pulse in gates[g_i].opList[0].pulseList]) for g_i in gateIndices]
-    G_T_theory = np.array(G_T) / (np.pi / (qSys.twoQubitValues[0][1]['ZZ'] * 2 * np.pi))
+
+    if gateName == 'CNOT':
+        prefact = 1
+    elif gateName == 'SWAP':
+        prefact = 3
+    elif gateName == 'sqrtSWAP':
+        prefact = 1.5
+    else:
+        prefact = 1
+
+    G_T_theory = np.array(G_T) / (prefact * np.pi / (qSys.twoQubitValues[0][1]['ZZ'] * 2 * np.pi))
     return {'U_vals': U_vals,
             'G_T': G_T,
             'G_T_theory': G_T_theory,
@@ -55,7 +65,7 @@ def getTomos(basePath, date, gateIndices, gateDataVals):
         U = gateDataVals['U_vals'][g_i]
         R_U = tomo._R_mle
         R_spamFree = qdpm.R_SPAMfree(U, R_U, R_I)
-        tomo._R_mle = R_spamFree.astype('float64')
+        tomo._R_mle = np.real(R_spamFree).astype('float64')
         tomos.append(tomo)
     return tomos
 
@@ -79,9 +89,9 @@ def IFs(basePath, date, gateIndices, gateDataVals, tomos):
                                                           torch.tensor(TheoryGate,
                                                                        dtype=torch.cdouble)).item())
         G_IF_Exp_TheoryGate.append(1 - tomo.fidelity(Qobj(TheoryGate, dims=[[2, 2], [2, 2]])))
-    return {'G_IF_Exp_Theory': G_IF_Exp_Theory,
-            'G_IF_Theory_TheoryGate': G_IF_Theory_TheoryGate,
-            'G_IF_Exp_TheoryGate': G_IF_Exp_TheoryGate}
+    return {'G_IF_Exp_Theory': np.array(G_IF_Exp_Theory),
+            'G_IF_Theory_TheoryGate': np.array(G_IF_Theory_TheoryGate),
+            'G_IF_Exp_TheoryGate': np.array(G_IF_Exp_TheoryGate)}
 
     # if g_i == 15:
     #     tomo.plot()
@@ -92,33 +102,42 @@ def IFs(basePath, date, gateIndices, gateDataVals, tomos):
 
 
 def fidelityCurve(gateName, rabiStrengthMHz, gateDataVals, IFdict):
-    plt.plot(gateDataVals['G_T_theory'], IFdict['G_IF_Exp_Theory'], 'bo-', label='IF Exp/Theory')
-    plt.plot(gateDataVals['G_T_theory'], IFdict['G_IF_Theory_TheoryGate'], 'go-', label='IF Theory/' + gateName)
-    plt.plot(gateDataVals['G_T_theory'], IFdict['G_IF_Exp_TheoryGate'], 'ro-', label='IF Exp/' + gateName)
+    plt.plot(gateDataVals['G_T_theory'], 1-IFdict['G_IF_Theory_TheoryGate'], 'bo-', label='F Optimizer/' + gateName)
+    plt.plot(gateDataVals['G_T_theory'], 1-IFdict['G_IF_Exp_TheoryGate'], 'o-', color='orange', label='F Exp/' + gateName)
 
     plt.legend()
-    plt.title(gateName + ' Q0-XY Q1-XY square 4segs $\Omega=$' + str(rabiStrengthMHz) + 'MHz')
-    plt.xlabel('Gate T (units of pi/gz)')
-    plt.ylabel('Infidelity')
-    plt.savefig(gateName + '_' + str(rabiStrengthMHz) + '_curves.png', format='png')
+    # plt.title(gateName + ' $\Omega=$' + str(round(rabiStrengthMHz/2, 2)) + 'MHz')
+    plt.xlabel('Gate T (units of $\pi/g_z$)')
+    plt.ylabel('Fidelity')
+    plt.savefig(gateName + '_' + str(round(rabiStrengthMHz/2, 2)) + 'MHz_curves.png', format='png')
     plt.show()
 
 
 def fidelityCurve_noise(gateName, rabiStrengthMHz, gateDataVals, IFdict, noiseDictIFs):
+    # plt.errorbar(x=gateDataVals['G_T_theory'],
+    #              y=noiseDictIFs['G_IF_Exp_Theory_Mean'],
+    #              yerr=noiseDictIFs['G_IF_Exp_Theory_STD'],
+    #              fmt='b-', label='IF Exp/Theory')
+
+    if gateName == 'sqrtSWAP':
+        labelGateName = '$\sqrt{\mathrm{SWAP}}$'
+    else:
+        labelGateName = gateName
+
+    plt.rcParams.update({'font.size': 12})
     plt.errorbar(x=gateDataVals['G_T_theory'],
-                 y=noiseDictIFs['G_IF_Exp_Theory_Mean'],
-                 yerr=noiseDictIFs['G_IF_Exp_Theory_STD'],
-                 fmt='b-', label='IF Exp/Theory')
-    plt.errorbar(x=gateDataVals['G_T_theory'],
-                 y=noiseDictIFs['G_IF_Exp_TheoryGate_Mean'],
+                 y=1-noiseDictIFs['G_IF_Exp_TheoryGate_Mean'],
                  yerr=noiseDictIFs['G_IF_Exp_TheoryGate_STD'],
-                 fmt='r-', label='IF Exp/' + str(gateName))
-    plt.plot(gateDataVals['G_T_theory'], IFdict['G_IF_Theory_TheoryGate'], 'go-', label='IF Theory/CNOT')
+                 fmt='-', color='orange', label='F Exp/' + labelGateName)
+    plt.plot(gateDataVals['G_T_theory'], 1-IFdict['G_IF_Theory_TheoryGate'], 'bo-', label='F Optimizer/'+labelGateName)
     plt.legend()
-    plt.title(gateName + ' Q0-XY Q1-XY square 4segs $\Omega=$' + str(rabiStrengthMHz) + 'MHz')
-    plt.xlabel('Gate T (units of pi/gz)')
-    plt.ylabel('Infidelity')
-    plt.savefig(gateName + '_' + str(rabiStrengthMHz) + '_curves_noise.png', format='png')
+
+    xlabel = 'Gate $T/T_{min}$'
+    plt.xlabel(xlabel)
+    plt.ylabel('Fidelity')
+    plt.grid()
+    plt.savefig(gateName + '_' + str(round(rabiStrengthMHz/2, 2)) + 'MHz_curves_noise.png', format='png', dpi=600,
+                bbox_inches='tight')
     plt.show()
 
 
@@ -159,10 +178,10 @@ def IFs_gaussianNoise(basePath, date, gateIndices, gateDataVals, tomos, numNoise
 
         G_IF_Exp_TheoryGate_Mean.append(np.mean(np.array(IFdict['G_IF_Exp_TheoryGate'])))
         G_IF_Exp_TheoryGate_STD.append(np.std(np.array(IFdict['G_IF_Exp_TheoryGate'])))
-    return {'G_IF_Exp_Theory_Mean': G_IF_Exp_Theory_Mean,
-            'G_IF_Exp_Theory_STD': G_IF_Exp_Theory_STD,
-            'G_IF_Exp_TheoryGate_Mean': G_IF_Exp_TheoryGate_Mean,
-            'G_IF_Exp_TheoryGate_STD': G_IF_Exp_TheoryGate_STD}
+    return {'G_IF_Exp_Theory_Mean': np.array(G_IF_Exp_Theory_Mean),
+            'G_IF_Exp_Theory_STD': np.array(G_IF_Exp_Theory_STD),
+            'G_IF_Exp_TheoryGate_Mean': np.array(G_IF_Exp_TheoryGate_Mean),
+            'G_IF_Exp_TheoryGate_STD': np.array(G_IF_Exp_TheoryGate_STD)}
 
 
 def plotPTMMap(tomo):

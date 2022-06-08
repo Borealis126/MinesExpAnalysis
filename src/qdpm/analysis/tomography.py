@@ -471,7 +471,7 @@ class ProcessTomography(object):
         ax.set_xlabel('Input Pauli Operator')
         ax.set_ylabel('Output Pauli Operator')
         ax.grid(color='k', alpha=0.2, linestyle='-', linewidth=1)
-        ax.set_title('QPT', fontsize=14)
+        # ax.set_title('QPT', fontsize=14)
         # fig.colorbar(img, ticks=np.linspace(-1, 1, 11))
         img.set_clim(-1, 1)
         return fig, ax, img
@@ -495,7 +495,7 @@ class ProcessTomography(object):
         ax.set_xlabel('Input Pauli Operator')
         ax.set_ylabel('Output Pauli Operator')
         ax.grid(color='k', alpha=0.2, linestyle='-', linewidth=1)
-        ax.set_title('QPT', fontsize=14)
+        # ax.set_title('QPT', fontsize=14)
         # fig.colorbar(img, ticks=np.linspace(-1, 1, 11))
         img.set_clim(-1, 1)
         return fig, ax, img
